@@ -1,6 +1,5 @@
 ![LeadBot](https://repository-images.githubusercontent.com/188332969/93320b00-7d8a-11e9-95ab-8ec570917423)
-# Leadbot fork for Deathmatch: Unlimited
-#### Current State: Alpha
+## Leadbot fork for Deathmatch: Unlimited
 ### Installation
 Click "Code" -> Download ZIP -> Extract leadbot-master to /addons/
 ### Commands/Convars
