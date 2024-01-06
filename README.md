@@ -1,32 +1,13 @@
 ![LeadBot](https://repository-images.githubusercontent.com/188332969/93320b00-7d8a-11e9-95ab-8ec570917423)
-## :robot:Player AI Bots to revive obscure gamemodes in Garry's Mod:robot:
+Leadbot fork for Deathmatch: Unlimited
 #### Current State: Alpha
 ### Installation
-Download LeadBot from [here](https://github.com/LeadKiller/leadbot/archive/master.zip), and drop leadbot-master into the addons folder.
-### Currently Supported Gamemodes:
- - Sandbox
- - [nZombies Unlimited](https://github.com/Zet0rz/nZombies-Unlimited)
- - [Darkest Days](https://steamcommunity.com/sharedfiles/filedetails/?id=823262022)
- - [Stop it, Slender!](https://steamcommunity.com/sharedfiles/filedetails/?id=171728689)
- - [DOGFIGHT: Arcade Assault](https://steamcommunity.com/sharedfiles/filedetails/?id=288399121)
- - [Hover Gear Legacy](https://steamcommunity.com/sharedfiles/filedetails/?id=104516229)
- - [Zombie Plague](https://github.com/Nicholas-Fuchs/zombieplague)
- - [Assassins](https://steamcommunity.com/sharedfiles/filedetails/?id=834782562)
- - [Super Cooking Panic](https://steamcommunity.com/sharedfiles/filedetails/?id=2180715133)
- - [Cave Fight](https://github.com/Tripperful/cavefight/)
- - [The Hidden](https://steamcommunity.com/sharedfiles/filedetails/?id=443458575)
- - [Slashers](https://steamcommunity.com/sharedfiles/filedetails/?id=1092007703)
- - [Slave of GMod](https://steamcommunity.com/sharedfiles/filedetails/?id=249207064)
- - [Team Fortress 2 Gamemode](https://github.com/moddage/tf2-gamemode)
- - [Cinema](https://steamcommunity.com/workshop/filedetails/?id=143148073)
- - [Quake 3](https://steamcommunity.com/sharedfiles/filedetails/?id=160207505)
- - [Slayer](https://steamcommunity.com/sharedfiles/filedetails/?id=1336605119)
- - [Other Gamemodes](https://github.com/LeadKiller/leadbot/projects/1)
+Click "Code" -> Download ZIP -> Extract leadbot-master to /addons/
 ### Commands/Convars
- - leadbot_add [1-128]
+ - leadbot_add _[1-128]_
  - leadbot_afk
  - leadbot_kick _[name/all]_
- - leadbot_quota _[0-128]
+ - leadbot_quota _[0-128]_
  - leadbot_strategy _[0/1]_
  - leadbot_afk_timetoafk _[0-300]_
  - leadbot_fakeping _[0/1]_ *Using this outside of Singleplayer/LAN/nomaster servers could get you banned/blacklisted!*
@@ -34,5 +15,14 @@ Download LeadBot from [here](https://github.com/LeadKiller/leadbot/archive/maste
  - leadbot_names _[name1,name2]_
  - leadbot_voice _[voiceset]_
  - leadbot_fov _[75-100]_
-### Issues
-You can submit issues on the [Discord](https://discord.gg/PJByEaPgTq) or through [issues](https://github.com/LeadKiller/leadbot/issues)
+ - leadbot_skill _[0-3]_
+### Chat commands
+ - !botskill _[0-3]_ - Initiate a vote to change bots' skill level
+ - !botquota _[0-*max players-1*]_ - Initiate a vote to change bot quota
+### Notable changes
+ - Bots have 4 different skill levels: Easy, Normal, Hard, Aggressive. They determine things like how fast bots aim, how frequently they jump, how fast they forget their target, etc
+ - Bots don't have infinite ammo
+ - Bots will choose their weapon depending on its rarity and ammo
+ - Bots will go towards weapon, health, armor pick-ups if they are close enough and have LoS
+ - Bots will go towards entities from `DMU.BotObjectves` and `DMU.BotTeamObjectives[*bot's team*]`. Add your objective entities to these tables to make bots go towards them
+ - Bots will not back down from their target if their active weapon has `SWEP.Melee` set to true
