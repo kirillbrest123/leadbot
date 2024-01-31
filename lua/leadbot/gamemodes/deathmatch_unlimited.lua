@@ -33,6 +33,17 @@ local melee_weapons = {
 
 local bot_skill = GetConVar("leadbot_skill")
 
+local jump_delay = bot_skill:GetInt() == 0 and 99999 or (7 - bot_skill:GetInt() * 2)
+local dementia_level = 5 + (bot_skill:GetInt() == 0 and 0 or ( (bot_skill:GetInt() - 1) * 2) )
+local shoot_body = (bot_skill:GetInt() <= 1) and 1 or 0 -- am i trying too hard to avoid elseif chains
+
+cvars.AddChangeCallback( "leadbot_skill", function(convar, oldValue, newValue)
+    newValue = tonumber(newValue)
+    jump_delay = newValue == 0 and 99999 or (7 - newValue * 2)
+    dementia_level = 5 + (newValue == 0 and 0 or ( (newValue - 1) * 2) )
+    shoot_body = (newValue <= 1) and 1 or 0 -- am i trying too hard to avoid elseif chains
+end)
+
 timer.Simple(0, function()
     if not DMU.Mode.Teams then
         LeadBot.TeamPlay = false
@@ -44,11 +55,6 @@ function LeadBot.StartCommand(bot, cmd)
     local botWeapon = bot:GetActiveWeapon()
     local controller = bot.ControllerBot
     local target = controller.Target
-
-    local skill = bot_skill:GetInt()
-    local jump_delay = 0
-
-    jump_delay = skill == 0 and 99999 or (7 - skill * 2)
 
     if !IsValid(controller) then return end
 
@@ -121,14 +127,6 @@ end
 
 function LeadBot.PlayerMove(bot, cmd, mv)
     if bot:IsFrozen() then return end
-    local skill = bot_skill:GetInt()
-    local aim_speed
-    local dementia_level
-    local shoot_body
-
-    aim_speed = math.random(6 + skill * 2, 8 + skill * 2)
-    dementia_level = 5 + (skill == 0 and 0 or ( (skill - 1) * 2) )
-    shoot_body = (skill <= 1) and 1 or 0 -- am i trying too hard to avoid elseif chains
 
     local controller = bot.ControllerBot
 
@@ -338,6 +336,8 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     end
 
     -- eyesight
+
+    local aim_speed = math.random(6 + bot_skill:GetInt() * 2, 8 + bot_skill:GetInt() * 2)
 
     local lerp = FrameTime() * aim_speed
     local lerpc = FrameTime() * 8
