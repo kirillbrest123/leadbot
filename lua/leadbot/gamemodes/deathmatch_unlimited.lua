@@ -261,7 +261,8 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         -- back up if the target is really close
         -- TODO: find a random spot rather than trying to back up into what could just be a wall
         -- something like controller.PosGen = controller:FindSpot("random", {pos = bot:GetPos() - bot:GetForward() * 350, radius = 1000})?
-        if distance <= 90000 and !(bot:GetActiveWeapon().Melee or melee_weapons[bot:GetActiveWeapon():GetClass()]) then
+        local active_melee_weapon = IsValid(bot:GetActiveWeapon()) and (bot:GetActiveWeapon().Melee or melee_weapons[bot:GetActiveWeapon():GetClass()])
+        if distance <= 90000 and !active_melee_weapon then
             mv:SetForwardSpeed(-1200)
         end
     end
