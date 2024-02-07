@@ -125,6 +125,8 @@ function LeadBot.StartCommand(bot, cmd)
     cmd:SetButtons(buttons)
 end
 
+local shoot_body_offset = Vector(0,0,24)
+
 function LeadBot.PlayerMove(bot, cmd, mv)
     if bot:IsFrozen() then return end
 
@@ -208,6 +210,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
             local pos = bot:GetPos()
             local clobj_pos
             for _, objective in ipairs(DMU.BotTeamObjectives[bot:Team()]) do
+                if !IsValid(objective) then continue end
                 local obj_pos = objective:GetPos()
                 --if objective.Type == "brush" then obj_pos = objective:OBBCenter() end -- FUCK YOU -- FUCK YOU X2 IT GOT CHANGED AND :GETPOS() NOW WORKS AS EXPECTED WITH BRUSHES
                 -- GOD DAMMIT FUCK
@@ -228,6 +231,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
             local pos = bot:GetPos()
             local clobj_pos
             for _, objective in ipairs(DMU.BotObjectives) do
+                if !IsValid(objective) then continue end
                 local obj_pos = objective:GetPos()
                 --if objective.Type == "brush" then obj_pos = objective:OBBCenter() end -- FUCK YOU -- FUCK YOU X2 IT GOT CHANGED AND :GETPOS() NOW WORKS AS EXPECTED WITH BRUSHES
                 -- GOD DAMMIT FUCK
@@ -353,7 +357,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     mv:SetMoveAngles(mva)
 
     if IsValid(controller.Target) then
-        bot:SetEyeAngles(LerpAngle(lerp, bot:EyeAngles(), (controller.Target:EyePos() - Vector(0, 0, 48 * shoot_body) - bot:GetShootPos()):Angle()))
+        bot:SetEyeAngles(LerpAngle(lerp, bot:EyeAngles(), (controller.Target:EyePos() - shoot_body_offset * shoot_body - bot:GetShootPos()):Angle()))
         return
     else
         if controller.LookAtTime > CurTime() then

@@ -24,7 +24,7 @@ hook.Add("Think", "LeadBot_Quota", function()
         end
 
         for i = 1, #bots do
-            if i >= convar1:GetInt() then
+            if i > max then
                 bots[i]:Kick()
             end
         end
