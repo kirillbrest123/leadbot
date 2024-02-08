@@ -36,6 +36,7 @@ local bot_skill = GetConVar("leadbot_skill")
 local jump_delay = bot_skill:GetInt() == 0 and 99999 or (7 - bot_skill:GetInt() * 2)
 local dementia_level = 5 + (bot_skill:GetInt() == 0 and 0 or ( (bot_skill:GetInt() - 1) * 2) )
 local shoot_body = (bot_skill:GetInt() <= 1) and 1 or 0 -- am i trying too hard to avoid elseif chains
+local reaction_time = 0.3 - (bot_skill:GetInt() * 0.05)
 
 cvars.AddChangeCallback( "leadbot_skill", function(convar, oldValue, newValue)
     newValue = tonumber(newValue)
@@ -62,7 +63,7 @@ function LeadBot.StartCommand(bot, cmd)
         buttons = 0
     end
 
-    if IsValid(target) and math.random(2) == 1 then
+    if IsValid(target) and !controller.Reacting and math.random(2) == 1 then
         buttons = buttons + IN_ATTACK
     end
 
@@ -169,6 +170,11 @@ function LeadBot.PlayerMove(bot, cmd, mv)
                 if ply:Alive() and controller:CanSee(ply) then
                     controller.Target = ply
                     controller.ForgetTarget = CurTime() + dementia_level
+                    controller.Reacting = true 
+                    timer.Simple(reaction_time, function()
+                        controller.Reacting = false
+                    end)
+                    break
                 end
             end
         end
@@ -182,7 +188,8 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         dt.Entity:Fire("OpenAwayFrom", bot, 0)
     end
 
-    if !IsValid(controller.Target) and (!controller.PosGen or controller.LastSegmented < CurTime()) then
+    if !IsValid(controller.Target) or controller.Reacting then
+        if !(!controller.PosGen or controller.LastSegmented < CurTime()) then goto cont end
         -- Find pickups. Bots prefer it over anything else if it's close enough
         for _, ent in ipairs(ents.FindInSphere(bot:GetPos(), 768)) do
             if not bot:IsLineOfSightClear(ent) then continue end
@@ -257,7 +264,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
 
         ::cont::
 
-    elseif IsValid(controller.Target) then
+    else
         -- move to our target
         local distance = controller.Target:GetPos():DistToSqr(bot:GetPos())
         controller.PosGen = controller.Target:GetPos()
@@ -356,7 +363,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
 
     mv:SetMoveAngles(mva)
 
-    if IsValid(controller.Target) then
+    if IsValid(controller.Target) and !controller.Reacting then
         bot:SetEyeAngles(LerpAngle(lerp, bot:EyeAngles(), (controller.Target:EyePos() - shoot_body_offset * shoot_body - bot:GetShootPos()):Angle()))
         return
     else
