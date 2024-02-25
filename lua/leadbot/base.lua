@@ -230,6 +230,8 @@ function LeadBot.AddBot()
 
     bot.LeadBot_Config = {model, color, weaponcolor, strategy}
 
+    bot.Objectives = {}
+
     -- for legacy purposes, will be removed soon when gamemodes are updated
     bot.BotStrategy = strategy
     bot.OriginalName = original_name

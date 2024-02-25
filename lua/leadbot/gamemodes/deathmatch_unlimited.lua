@@ -45,6 +45,13 @@ cvars.AddChangeCallback( "leadbot_skill", function(convar, oldValue, newValue)
     shoot_body = (newValue <= 1) and 1 or 0 -- am i trying too hard to avoid elseif chains
 end)
 
+local function has_ammo(bot, weapon)
+    if !IsValid(weapon) then return false end
+    if (weapon:GetPrimaryAmmoType() == "none" or weapon:GetPrimaryAmmoType() == -1) then return true end
+    if (bot:GetAmmoCount(weapon:GetPrimaryAmmoType()) == 0 and weapon:Clip1() <= 0) then return false end
+    return true
+end
+
 timer.Simple(0, function()
     if not DMU.Mode.Teams then
         LeadBot.TeamPlay = false
@@ -107,7 +114,7 @@ function LeadBot.StartCommand(bot, cmd)
         for k,v in ipairs(weapon_list) do
             local new_score = quality_score[DMU.weapon_to_rarity[v:GetClass()]] or -1
             local old_score = quality_score[DMU.weapon_to_rarity[weapon:GetClass()]] or -1
-            if ( new_score > old_score and (bot:GetAmmoCount(v:GetPrimaryAmmoType()) != 0 or v:Clip1() != 0) ) or (bot:GetAmmoCount(weapon:GetPrimaryAmmoType()) == 0 and (weapon:Clip1() == 0 or weapon:Clip1() == -1)) then
+            if ( new_score > old_score and has_ammo(bot, v) ) or !has_ammo(bot, weapon) then
                 weapon = v
             end       
         end
@@ -191,6 +198,9 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     if !IsValid(controller.Target) or controller.Reacting then
         if !(!controller.PosGen or controller.LastSegmented < CurTime()) then goto cont end
         -- Find pickups. Bots prefer it over anything else if it's close enough
+
+        local weapon = bot:GetActiveWeapon()
+
         for _, ent in ipairs(ents.FindInSphere(bot:GetPos(), 768)) do
             if not bot:IsLineOfSightClear(ent) then continue end
 
@@ -204,25 +214,42 @@ function LeadBot.PlayerMove(bot, cmd, mv)
                 controller.LastSegmented = CurTime() + 3
                 goto cont
                 break
-            elseif ent:GetClass() == "dmu_weapon_spawner" and !ent:GetEmpty() then
+            elseif ent:GetClass() == "dmu_weapon_spawner" and !ent:GetEmpty() and
+            (!has_ammo(bot, weapon) or (quality_score[DMU.weapon_to_rarity[ent:GetWeapon()]]) >= (quality_score[DMU.weapon_to_rarity[weapon:GetClass()]] or -1)) then
                 controller.PosGen = ent:GetPos()
                 controller.LastSegmented = CurTime() + 3
                 goto cont
                 break
             end
         end
-        -- Find Team Objectives
-        if DMU.BotTeamObjectives[bot:Team()] and !table.IsEmpty(DMU.BotTeamObjectives[bot:Team()]) then
-            local closest_objective = DMU.BotTeamObjectives[bot:Team()][1]
+        if !table.IsEmpty(bot.Objectives) then
+            local _, closest_objective = table.Random(bot.Objectives)
             local pos = bot:GetPos()
             local clobj_pos
-            for _, objective in ipairs(DMU.BotTeamObjectives[bot:Team()]) do
-                if !IsValid(objective) then continue end
+            for objective, _ in pairs(bot.Objectives) do
+                if !IsValid(objective) then bot.Objectives[objective] = nil continue end
                 local obj_pos = objective:GetPos()
-                --if objective.Type == "brush" then obj_pos = objective:OBBCenter() end -- FUCK YOU -- FUCK YOU X2 IT GOT CHANGED AND :GETPOS() NOW WORKS AS EXPECTED WITH BRUSHES
-                -- GOD DAMMIT FUCK
+
                 clobj_pos = closest_objective:GetPos()
-                --if closest_objective.Type == "brush" then clobj_pos = closest_objective:OBBCenter() end 
+                
+                if pos:DistToSqr(obj_pos) < pos:DistToSqr(clobj_pos) then
+                    closest_objective = objective
+                end
+            end
+            controller.PosGen = clobj_pos
+            controller.LastSegmented = CurTime() + 5
+            goto cont
+        end
+        -- Find Team Objectives
+        if DMU.BotTeamObjectives[bot:Team()] and !table.IsEmpty(DMU.BotTeamObjectives[bot:Team()]) then
+            local _, closest_objective = table.Random(DMU.BotTeamObjectives[bot:Team()])
+            local pos = bot:GetPos()
+            local clobj_pos
+            for objective, _ in pairs(DMU.BotTeamObjectives[bot:Team()]) do
+                if !IsValid(objective) then DMU.BotTeamObjectives[objective] = nil continue end
+                local obj_pos = objective:GetPos()
+
+                clobj_pos = closest_objective:GetPos()
                 
                 if pos:DistToSqr(obj_pos) < pos:DistToSqr(clobj_pos) then
                     closest_objective = objective
@@ -234,16 +261,14 @@ function LeadBot.PlayerMove(bot, cmd, mv)
         end
         -- Find Objectives
         if !table.IsEmpty(DMU.BotObjectives) then
-            local closest_objective = DMU.BotObjectives[1]
+            local _, closest_objective = table.Random(DMU.BotObjectives)
             local pos = bot:GetPos()
             local clobj_pos
-            for _, objective in ipairs(DMU.BotObjectives) do
-                if !IsValid(objective) then continue end
+            for objective, _ in pairs(DMU.BotObjectives) do
+                if !IsValid(objective) then DMU.BotObjectives[objective] = nil continue end
                 local obj_pos = objective:GetPos()
-                --if objective.Type == "brush" then obj_pos = objective:OBBCenter() end -- FUCK YOU -- FUCK YOU X2 IT GOT CHANGED AND :GETPOS() NOW WORKS AS EXPECTED WITH BRUSHES
-                -- GOD DAMMIT FUCK
+
                 clobj_pos = closest_objective:GetPos()
-                --if closest_objective.Type == "brush" then clobj_pos = closest_objective:OBBCenter() end 
                 
                 if pos:DistToSqr(obj_pos) < pos:DistToSqr(clobj_pos) then
                     closest_objective = objective
@@ -349,7 +374,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
 
     -- eyesight
 
-    local aim_speed = math.random(6 + bot_skill:GetInt() * 2, 8 + bot_skill:GetInt() * 2)
+    local aim_speed = math.random(2 + bot_skill:GetInt() * 2, 4 + bot_skill:GetInt() * 2)
 
     local lerp = FrameTime() * aim_speed
     local lerpc = FrameTime() * 8
