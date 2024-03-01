@@ -37,12 +37,14 @@ local jump_delay = bot_skill:GetInt() == 0 and 99999 or (7 - bot_skill:GetInt() 
 local dementia_level = 5 + (bot_skill:GetInt() == 0 and 0 or ( (bot_skill:GetInt() - 1) * 2) )
 local shoot_body = (bot_skill:GetInt() <= 1) and 1 or 0 -- am i trying too hard to avoid elseif chains
 local reaction_time = 0.3 - (bot_skill:GetInt() * 0.05)
+local aim_offset = 16 - 4 * bot_skill:GetInt()
 
 cvars.AddChangeCallback( "leadbot_skill", function(convar, oldValue, newValue)
     newValue = tonumber(newValue)
     jump_delay = newValue == 0 and 99999 or (7 - newValue * 2)
     dementia_level = 5 + (newValue == 0 and 0 or ( (newValue - 1) * 2) )
     shoot_body = (newValue <= 1) and 1 or 0 -- am i trying too hard to avoid elseif chains
+    aim_offset = 16 - 4 * bot_skill:GetInt()
 end)
 
 local function has_ammo(bot, weapon)
@@ -66,7 +68,7 @@ function LeadBot.StartCommand(bot, cmd)
 
     if !IsValid(controller) then return end
 
-    if LeadBot.NoSprint then
+    if LeadBot.NoSprint or bot_skill:GetInt() == 0 then
         buttons = 0
     end
 
@@ -374,7 +376,7 @@ function LeadBot.PlayerMove(bot, cmd, mv)
 
     -- eyesight
 
-    local aim_speed = math.random(2 + bot_skill:GetInt() * 2, 4 + bot_skill:GetInt() * 2)
+    local aim_speed = math.random(4 + bot_skill:GetInt() * 2, 6 + bot_skill:GetInt() * 2)
 
     local lerp = FrameTime() * aim_speed
     local lerpc = FrameTime() * 8
@@ -389,7 +391,8 @@ function LeadBot.PlayerMove(bot, cmd, mv)
     mv:SetMoveAngles(mva)
 
     if IsValid(controller.Target) and !controller.Reacting then
-        bot:SetEyeAngles(LerpAngle(lerp, bot:EyeAngles(), (controller.Target:EyePos() - shoot_body_offset * shoot_body - bot:GetShootPos()):Angle()))
+        local shoot_pos = ( controller.Target:EyePos() - shoot_body_offset * shoot_body + VectorRand( -aim_offset, aim_offset ) ) - bot:GetShootPos()
+        bot:SetEyeAngles(LerpAngle(lerp, bot:EyeAngles(), shoot_pos:Angle()))
         return
     else
         if controller.LookAtTime > CurTime() then
